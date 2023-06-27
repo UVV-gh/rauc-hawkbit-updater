@@ -47,6 +47,10 @@ post_update_reboot        = false
 # debug, info, message, critical, error, fatal
 log_level                 = message
 
+# Decline download and installation of a bundle when the version
+# matches with currently installed one from the active slot
+ignore_same               = false
+
 # Every key / value under [device] is sent to HawkBit (target attributes),
 # and can be used in target filter.
 [device]
