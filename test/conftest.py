@@ -126,7 +126,12 @@ def rauc_bundle(tmp_path_factory):
     return str(bundle)
 
 @pytest.fixture
-def assign_bundle(hawkbit, hawkbit_target_added, rauc_bundle, tmp_path):
+def version_increment():
+    from itertools import count
+    # Increment version to be able to flash over an already deployed distribution
+    yield count(start=1.0, step=0.1)
+
+def assign_bundle_internal(hawkbit, hawkbit_target_added, rauc_bundle, tmp_path, new_version):
     """
     Creates a softwaremodule containing the file from the rauc_bundle fixture as an artifact.
     Creates a distributionset from this softwaremodule. Assigns this distributionset to the target
@@ -137,11 +142,12 @@ def assign_bundle(hawkbit, hawkbit_target_added, rauc_bundle, tmp_path):
     artifacts = []
     distributionsets = []
     actions = []
+    version = next(new_version)
 
     def _assign_bundle(swmodules_num=1, artifacts_num=1, params=None):
         for i in range(swmodules_num):
             swmodule_type = 'application' if swmodules_num > 1 else 'os'
-            swmodules.append(hawkbit.add_softwaremodule(module_type=swmodule_type))
+            swmodules.append(hawkbit.add_softwaremodule(module_type=swmodule_type, module_version=version))
 
             for k in range(artifacts_num):
                 # hawkBit will reject files with the same name, so symlink to unique names
@@ -155,7 +161,8 @@ def assign_bundle(hawkbit, hawkbit_target_added, rauc_bundle, tmp_path):
 
         dist_type = 'app' if swmodules_num > 1 else 'os'
         distributionsets.append(hawkbit.add_distributionset(module_ids=swmodules,
-                                                            dist_type=dist_type))
+                                                            dist_type=dist_type,
+                                                            dist_version=version))
         actions.append(hawkbit.assign_target(distributionsets[-1], params=params))
 
         return actions[-1]
@@ -179,6 +186,10 @@ def assign_bundle(hawkbit, hawkbit_target_added, rauc_bundle, tmp_path):
                 pass
 
             hawkbit.delete_softwaremodule(swmodule)
+
+@pytest.fixture
+def assign_bundle(hawkbit, hawkbit_target_added, rauc_bundle, tmp_path, version_increment):
+    yield from assign_bundle_internal(hawkbit, hawkbit_target_added, rauc_bundle, tmp_path, version_increment)
 
 @pytest.fixture
 def bundle_assigned(assign_bundle):

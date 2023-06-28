@@ -33,7 +33,6 @@ class HawkbitMgmtTestClient:
     port = attr.ib(validator=attr.validators.instance_of(int))
     username = attr.ib(default='admin', validator=attr.validators.instance_of(str))
     password = attr.ib(default='admin', validator=attr.validators.instance_of(str))
-    version = attr.ib(default=1.0, validator=attr.validators.instance_of(float))
 
     def __attrs_post_init__(self):
         self.url = f'http://{self.host}:{self.port}/rest/v1/{{endpoint}}'
@@ -207,7 +206,7 @@ class HawkbitMgmtTestClient:
 
         return self.get(f'targets/{target_id}/attributes')
 
-    def add_softwaremodule(self, name: str = None, module_type: str = 'os'):
+    def add_softwaremodule(self, name: str = None, module_type: str = 'os', module_version: float = 0.1):
         """
         Adds a new software module with `name`.
         If `name` is not given, a generic name is made up.
@@ -219,7 +218,7 @@ class HawkbitMgmtTestClient:
         name = name or f'software module {time.monotonic()}'
         data = [{
             'name': name,
-            'version': str(self.version),
+            'version': module_version,
             'type': module_type,
         }]
 
@@ -250,7 +249,7 @@ class HawkbitMgmtTestClient:
         if 'softwaremodule' in self.id and module_id == self.id['softwaremodule']:
             del self.id['softwaremodule']
 
-    def add_distributionset(self, name: str = None, module_ids: list = [], dist_type: str = 'os'):
+    def add_distributionset(self, name: str = None, module_ids: list = [], dist_type: str = 'os', dist_version: float = 0.1):
         """
         Adds a new distribution set with `name` containing the software modules matching `module_ids`.
         If `name` is not given, a generic name is made up.
@@ -263,12 +262,12 @@ class HawkbitMgmtTestClient:
         """
         assert isinstance(module_ids, list)
 
-        name = name or f'distribution {self.version} ({time.monotonic()})'
+        name = name or f'distribution {dist_version} ({time.monotonic()})'
         module_ids = module_ids or [self.id['softwaremodule']]
         data = [{
             'name': name,
             'description': 'Test distribution',
-            'version': str(self.version),
+            'version': dist_version,
             'modules': [],
             'type': dist_type,
         }]
@@ -373,9 +372,6 @@ class HawkbitMgmtTestClient:
             testdata[0].update(params)
 
         response = self.post(f'distributionsets/{dist_id}/assignedTargets', testdata)
-
-        # Increment version to be able to flash over an already deployed distribution
-        self.version += 0.1
 
         self.id['action'] = response.get('assignedActions')[-1].get('id')
         return self.id['action']
