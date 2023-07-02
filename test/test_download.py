@@ -141,3 +141,39 @@ def test_download_only(hawkbit, config, assign_bundle):
 
     # check last status message
     assert 'File checksum OK.' in status[0]['messages']
+
+def test_download_only_reject_same(hawkbit, config, assign_same_bundle):
+    """Test "downloadonly" deployment."""
+    from time import sleep
+    import logging
+
+    logger = logging.getLogger()
+    assign_same_bundle(params={'type': 'downloadonly'})
+
+    out, err, exitcode = run(f'rauc-hawkbit-updater -c "{config}" -r')
+    #assert 'Download is skipped, because the same version is already installed' in out
+    assert err == ''
+    assert exitcode == 0
+
+    update_finished = False
+
+    for i in range(100):
+        status = hawkbit.get_action_status()
+        logger.info(status)
+        if status[0]['type'] == 'downloaded':
+            update_finished = True
+            break;
+
+        sleep(0.1)
+
+    assert update_finished
+
+    assign_same_bundle(params={'type': 'downloadonly'})
+
+    out, err, exitcode = run(f'rauc-hawkbit-updater -c "{config}" -r')
+    assert 'Download is skipped, because the same version is already installed' in out
+    assert err == ''
+    assert exitcode == 0
+
+    status = hawkbit.get_action_status()
+    assert status[0]['type'] == 'success'

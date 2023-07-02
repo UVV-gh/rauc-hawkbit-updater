@@ -131,6 +131,11 @@ def version_increment():
     # Increment version to be able to flash over an already deployed distribution
     yield count(start=1.0, step=0.1)
 
+@pytest.fixture
+def version_same():
+    from itertools import count
+    yield count(start=2.0, step=0.0)
+
 def assign_bundle_internal(hawkbit, hawkbit_target_added, rauc_bundle, tmp_path, new_version):
     """
     Creates a softwaremodule containing the file from the rauc_bundle fixture as an artifact.
@@ -190,6 +195,10 @@ def assign_bundle_internal(hawkbit, hawkbit_target_added, rauc_bundle, tmp_path,
 @pytest.fixture
 def assign_bundle(hawkbit, hawkbit_target_added, rauc_bundle, tmp_path, version_increment):
     yield from assign_bundle_internal(hawkbit, hawkbit_target_added, rauc_bundle, tmp_path, version_increment)
+
+@pytest.fixture
+def assign_same_bundle(hawkbit, hawkbit_target_added, rauc_bundle, tmp_path, version_same):
+    yield from assign_bundle_internal(hawkbit, hawkbit_target_added, rauc_bundle, tmp_path, version_same)
 
 @pytest.fixture
 def bundle_assigned(assign_bundle):
