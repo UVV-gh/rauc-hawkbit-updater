@@ -1177,6 +1177,17 @@ static gboolean process_deployment(JsonNode *req_root, GError **error)
                 goto proc_error;
         }
 
+        g_message("Check if we have the same version");
+#if 1
+        if (g_strcmp0(artifact->version, "2.0") == 0) {
+            feedback(artifact->feedback_url, active_action->id,
+                "Download is skipped, because the same version is already installed",
+                "success",
+                "closed", NULL);
+            active_action->state = ACTION_STATE_NONE;
+            return TRUE;
+        }
+#endif
         g_message("New software ready for download (Name: %s, Version: %s, Size: %" G_GINT64_FORMAT " bytes, URL: %s)",
                   artifact->name, artifact->version, artifact->size, artifact->download_url);
 
