@@ -126,7 +126,7 @@ denied_message = "Denied because we are not interested in the update"
 @pytest.mark.parametrize("confirm", [False])
 @pytest.mark.parametrize("error_code", [-120])
 @pytest.mark.parametrize("details", [denied_message])
-def test_install_confirmation_denied(hawkbit, adjust_config, confirm_workflow_hawkbit, bundle_assigned,
+def test_install_confirmation_denied(hawkbit, adjust_config, confirm_workflow_hawkbit, assign_bundle,
                                      install_confirmation_plugin, confirm, error_code, details):
     """
     Enable user confirmation in Hawkbit config. Deny requested installation
@@ -134,6 +134,7 @@ def test_install_confirmation_denied(hawkbit, adjust_config, confirm_workflow_ha
     """
     import re
 
+    assign_bundle(params={'type': 'soft'})
     config = adjust_config({'client':{'require_confirmation': 'true'}})
     confirmed_regex = re.compile("Action .* denied")
 
